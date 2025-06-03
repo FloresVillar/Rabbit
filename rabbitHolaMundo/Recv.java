@@ -6,12 +6,12 @@ import java.nio.charset.StandardCharsets;
 
 public class Recv {
 
-    private final static String QUEUE_NAME = "hello";
+    private final static String QUEUE_NAME = "colaParaSaludo";
 
     public static void main(String[] argv) throws Exception {
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        Connection connection = factory.newConnection();
+        ConnectionFactory factory = new ConnectionFactory();//creando conexion con el servidor RabbitMQ
+        factory.setHost("localhost"); //la direccion del serevidor rabbit ,en cmd rabbitmq-service.bat stop ,start
+        Connection connection = factory.newConnection();//
         Channel channel = connection.createChannel();
 
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);

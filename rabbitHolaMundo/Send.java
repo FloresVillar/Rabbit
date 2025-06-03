@@ -5,7 +5,7 @@ import com.rabbitmq.client.ConnectionFactory;
 import java.nio.charset.StandardCharsets;
 
 public class Send{
-    private final static String COLA_DE_MENSAJES = "saludo";
+    private final static String COLA_DE_MENSAJES = "colaParaSaludo";
     public static void main(String[]argv) throws Exception{
         ConnectionFactory creador = new ConnectionFactory();
         creador.setHost("localHost");
