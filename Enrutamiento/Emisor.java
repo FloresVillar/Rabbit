@@ -2,6 +2,8 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Channel;
 import java.util.Scanner;
+import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.AMQP;
 public class Emisor{ 
     private static final String COLA = "direct_logs";
     public static void main(String[]argv)throws Exception{
@@ -19,9 +21,23 @@ public class Emisor{
                 String tipo_operacion = in.nextLine();
                 String dni = in.nextLine();
                 String seguir = in.nextLine();
-                flag = seguir.equalsIgnoreCase("salir")?false:true;        
-                canal.basicPublish(COLA,tipo_operacion,null,dni.getBytes());
+                flag = seguir.equalsIgnoreCase("salir")?false:true;
+                String replyQueue = canal.queueDeclare().getQueue();
+                String corrId = java.util.UUID.randomUUID().toString();
+                AMQP.BasicProperties respuesta = new AMQP.BasicProperties.Builder().correlationId(corrId).replyTo(replyQueue).build();        
+                canal.basicPublish(COLA,tipo_operacion,respuesta,dni.getBytes());
                 System.out.println("enviando '"+dni+"'");
+                final boolean[] respuestaRecibida = {false};
+                DeliverCallback respuestaCallback = (consumerTag, entrega) -> {
+                    if (entrega.getProperties().getCorrelationId().equals(corrId)) {
+                    String respuest = new String(entrega.getBody(), "UTF-8");
+                    System.out.println("Respuesta recibida: " + respuest);
+                    //recibido la respuesta llama a ReceptorVENTAS
+                    respuestaRecibida[0] = true;
+                }
+            };
+canal.basicConsume(replyQueue, true, respuestaCallback, consumerTag -> {});
+
             }
         }
     } 

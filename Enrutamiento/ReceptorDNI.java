@@ -2,7 +2,7 @@ import com.rabbitmq.client.*;
 import java.util.Scanner;
 import java.util.ArrayList;
 
-public class Receptor {
+public class ReceptorDNI {
   private static ArrayList<Sujeto> data;
   private static final String COLA = "direct_logs";
   static class Sujeto{
@@ -33,13 +33,11 @@ public String toString() {
         amigosStr += amigos[i];
         if (i < amigos.length - 1) amigosStr += ",";
     }
-    return String.format("%-3d %-10s %-18s %-6d %-10d  %-10d %-12s", 
-                          id, nombre, correo, clave, dni,telefono, amigosStr);
+    return String.format("%-3d %-10s %-18s %-6d %-10d  %-10d %-12s", id, nombre, correo, clave, dni,telefono, amigosStr);
     }
 
 public static String etiquetas() {
-    return String.format("%-3s %-10s %-18s %-6s  %-10s %-10s %-12s", 
-                         "ID", "Nombre", "Correo", "Clave","dni", "Teléfono", "Amigos");
+    return String.format("%-3s %-10s %-18s %-6s  %-10s %-10s %-12s",  "ID", "Nombre", "Correo", "Clave","dni", "Teléfono", "Amigos");
 }
 
     }
@@ -92,9 +90,15 @@ public static String etiquetas() {
         System.out.println(" [x] recibido '" + entrega.getEnvelope().getRoutingKey() + "':'" + mensaje + "'");
         String resultado = validarDni(mensaje);//trabajar
         System.out.println("resultado de consuta: "+resultado);
+        if(resultado.equalsIgnoreCase("si existe")){
+          //enviar a emisor
+          AMQP.BasicProperties replyProps = new AMQP.BasicProperties.Builder().correlationId(entrega.getProperties().getCorrelationId()).build();
+          canal.basicPublish("", entrega.getProperties().getReplyTo(), replyProps, resultado.getBytes("UTF-8"));
+        }
     };
     canal.basicConsume(nombre, true, alrecibir, id -> { });
   }
+  //-----------------------------------------------------
   public static String validarDni(String mensaje){
       for(Sujeto s:data){
           if (s.dni==Integer.parseInt(mensaje)){
